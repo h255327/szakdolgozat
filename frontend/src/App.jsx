@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
+import Navbar         from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import HomePage         from './pages/HomePage';
 import LoginPage        from './pages/LoginPage';
@@ -22,20 +23,23 @@ function App() {
       <Navbar />
       <main>
         <Routes>
-          <Route path="/"              element={<HomePage />} />
-          <Route path="/login"         element={<LoginPage />} />
-          <Route path="/register"      element={<RegisterPage />} />
-          <Route path="/dashboard"     element={<DashboardPage />} />
-          <Route path="/profile"       element={<ProfilePage />} />
-          <Route path="/recipes"       element={<RecipesPage />} />
-          <Route path="/recipes/add"   element={<AddRecipePage />} />
-          <Route path="/recipes/:id"   element={<RecipeDetailPage />} />
-          <Route path="/articles"      element={<ArticlesPage />} />
-          <Route path="/planner"       element={<DietPlannerPage />} />
-          <Route path="/meals"         element={<MealLogPage />} />
-          <Route path="/shopping"      element={<ShoppingListPage />} />
-          <Route path="/chatbot"       element={<ChatbotPage />} />
-          <Route path="/admin"         element={<AdminPage />} />
+          {/* Public */}
+          <Route path="/"         element={<HomePage />} />
+          <Route path="/login"    element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/recipes"  element={<RecipesPage />} />
+          <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+          <Route path="/articles" element={<ArticlesPage />} />
+
+          {/* Private */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/profile"   element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/recipes/add" element={<ProtectedRoute><AddRecipePage /></ProtectedRoute>} />
+          <Route path="/planner"   element={<ProtectedRoute><DietPlannerPage /></ProtectedRoute>} />
+          <Route path="/meals"     element={<ProtectedRoute><MealLogPage /></ProtectedRoute>} />
+          <Route path="/shopping"  element={<ProtectedRoute><ShoppingListPage /></ProtectedRoute>} />
+          <Route path="/chatbot"   element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+          <Route path="/admin"     element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </>

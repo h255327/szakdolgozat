@@ -2,7 +2,7 @@
 -- Healthy Eating App - Database Schema
 -- =============================================================
 
-CREATE DATABASE IF NOT EXISTS healthy_eating_db
+CREATE DATABASE IF NOT EXISTS healthy_eating_app
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
@@ -13,11 +13,17 @@ USE healthy_eating_db;
 -- =============================================================
 
 CREATE TABLE users (
-  id            INT             NOT NULL AUTO_INCREMENT,
-  username      VARCHAR(50)     NOT NULL UNIQUE,
-  email         VARCHAR(100)    NOT NULL UNIQUE,
-  password_hash VARCHAR(255)    NOT NULL,
-  created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  id INT NOT NULL AUTO_INCREMENT,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+  password_hash VARCHAR(255) NOT NULL,
+  weight DECIMAL(5,2),
+  goal VARCHAR(50),
+  diet_type VARCHAR(50),
+  calorie_target INT,
+  notification_preferences TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id)
 );
 

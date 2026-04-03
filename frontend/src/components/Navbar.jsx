@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { isAuthenticated, logout } from '../services/auth';
 
 const NAV_LINKS = [
   { to: '/',          label: 'Home' },
@@ -11,13 +12,15 @@ const NAV_LINKS = [
   { to: '/chatbot',   label: 'Assistant' },
 ];
 
-const AUTH_LINKS = [
-  { to: '/profile',  label: 'Profile' },
-  { to: '/login',    label: 'Login' },
-  { to: '/register', label: 'Register' },
-];
-
 function Navbar() {
+  const navigate   = useNavigate();
+  const loggedIn   = isAuthenticated();
+
+  function handleLogout() {
+    logout();
+    navigate('/login');
+  }
+
   return (
     <nav>
       <div>
@@ -31,11 +34,17 @@ function Navbar() {
         ))}
       </ul>
       <ul>
-        {AUTH_LINKS.map(({ to, label }) => (
-          <li key={to}>
-            <Link to={to}>{label}</Link>
-          </li>
-        ))}
+        {loggedIn ? (
+          <>
+            <li><Link to="/profile">Profile</Link></li>
+            <li><button onClick={handleLogout}>Logout</button></li>
+          </>
+        ) : (
+          <>
+            <li><Link to="/login">Login</Link></li>
+            <li><Link to="/register">Register</Link></li>
+          </>
+        )}
       </ul>
     </nav>
   );

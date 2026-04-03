@@ -1,11 +1,15 @@
-// const { pool } = require('../config/db');
+const UserModel = require('../models/user.model');
 
 async function getProfile(userId) {
-  // TODO: fetch user row by id
+  const user = await UserModel.findById(userId);
+  if (!user) throw { status: 404, message: 'User not found.' };
+  return user;
 }
 
 async function updateProfile(userId, data) {
-  // TODO: update user fields
+  const user = await UserModel.updateById(userId, data);
+  if (!user) throw { status: 404, message: 'User not found.' };
+  return user;
 }
 
 async function deleteAccount(userId) {
