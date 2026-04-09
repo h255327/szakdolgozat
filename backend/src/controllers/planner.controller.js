@@ -1,18 +1,13 @@
 const plannerService = require('../services/planner.service');
 
-async function getWeeklyPlan(req, res) {
-  // TODO: return the week's meal plan starting from :date
-  res.json({ message: 'getWeeklyPlan – not implemented' });
+async function getDailyPlan(req, res) {
+  try {
+    const plan = await plannerService.generateDailyPlan(req.user.id);
+    return res.json({ plan });
+  } catch (err) {
+    const status = err.status || 500;
+    return res.status(status).json({ error: err.message || 'Failed to generate plan.' });
+  }
 }
 
-async function addMeal(req, res) {
-  // TODO: add a recipe to the plan for a given day
-  res.json({ message: 'addMeal – not implemented' });
-}
-
-async function removeMeal(req, res) {
-  // TODO: remove a meal from the plan
-  res.json({ message: 'removeMeal – not implemented' });
-}
-
-module.exports = { getWeeklyPlan, addMeal, removeMeal };
+module.exports = { getDailyPlan };

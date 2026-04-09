@@ -5,10 +5,16 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "seed": "node scripts/seed.js",
+    "import-recipes": "node scripts/importRecipes.js",
+    "seed-more": "node scripts/seedMoreRecipes.js",
+    "import-articles": "node scripts/importArticles.js",
+    "seed-foods": "node scripts/seedFoods.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "openai": "^4.52.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

@@ -1,17 +1,9 @@
 const express = require('express');
-const router = express.Router();
+const router  = express.Router();
 const shoppingController = require('../controllers/shopping.controller');
+const { authenticate } = require('../middleware/auth.middleware');
 
-// GET    /api/shopping
-router.get('/',             shoppingController.getList);
-
-// POST   /api/shopping/generate
-router.post('/generate',    shoppingController.generateFromMeals);
-
-// POST   /api/shopping
-router.post('/',            shoppingController.addItem);
-
-// DELETE /api/shopping/:id
-router.delete('/:id',       shoppingController.removeItem);
+// POST /api/shopping/generate  — generate list from a set of recipe IDs
+router.post('/generate', authenticate, shoppingController.generate);
 
 module.exports = router;

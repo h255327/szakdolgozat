@@ -1,11 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { isAuthenticated, logout } from '../services/auth';
 
 const NAV_LINKS = [
   { to: '/',          label: 'Home' },
-  { to: '/dashboard', label: 'Dashboard' },
   { to: '/recipes',   label: 'Recipes' },
   { to: '/articles',  label: 'Articles' },
+  { to: '/dashboard', label: 'Dashboard' },
   { to: '/planner',   label: 'Planner' },
   { to: '/meals',     label: 'Meal Log' },
   { to: '/shopping',  label: 'Shopping' },
@@ -13,39 +13,58 @@ const NAV_LINKS = [
 ];
 
 function Navbar() {
-  const navigate   = useNavigate();
-  const loggedIn   = isAuthenticated();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const loggedIn  = isAuthenticated();
 
   function handleLogout() {
     logout();
     navigate('/login');
   }
 
+  function isActive(to) {
+    if (to === '/') return location.pathname === '/';
+    return location.pathname.startsWith(to);
+  }
+
   return (
-    <nav>
-      <div>
-        <Link to="/"><strong>HealthyEat</strong></Link>
+    <nav className="navbar">
+      <div className="navbar-inner">
+        <Link to="/" className="nav-logo">🥗 HealthyEat</Link>
+
+        <div className="nav-links">
+          {NAV_LINKS.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`nav-link${isActive(to) ? ' active' : ''}`}
+            >
+              {label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="nav-actions">
+          {loggedIn ? (
+            <>
+              <Link
+                to="/profile"
+                className={`nav-link${isActive('/profile') ? ' active' : ''}`}
+              >
+                Profile
+              </Link>
+              <button className="btn btn-primary btn-sm" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-ghost btn-sm">Login</Link>
+              <Link to="/register" className="btn btn-primary btn-sm">Register</Link>
+            </>
+          )}
+        </div>
       </div>
-      <ul>
-        {NAV_LINKS.map(({ to, label }) => (
-          <li key={to}>
-            <Link to={to}>{label}</Link>
-          </li>
-        ))}
-      </ul>
-      <ul>
-        {loggedIn ? (
-          <>
-            <li><Link to="/profile">Profile</Link></li>
-            <li><button onClick={handleLogout}>Logout</button></li>
-          </>
-        ) : (
-          <>
-            <li><Link to="/login">Login</Link></li>
-            <li><Link to="/register">Register</Link></li>
-          </>
-        )}
-      </ul>
     </nav>
   );
 }

@@ -1,4 +1,5 @@
 const MealModel = require('../models/meal.model');
+const FoodModel = require('../models/food.model');
 
 function calcTotals(meals) {
   const totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
@@ -58,4 +59,28 @@ async function deleteItem(mealId, itemId, userId) {
   await MealModel.removeItem(itemId);
 }
 
-module.exports = { getByDate, createMeal, addItem, updateItem, deleteItem };
+async function addItemFromFood(mealId, userId, { food_id, quantity }) {
+  const meal = await MealModel.findById(mealId);
+  if (!meal)                  throw { status: 404, message: 'Meal not found.' };
+  if (meal.user_id !== userId) throw { status: 403, message: 'Access denied.' };
+  if (!food_id)               throw { status: 400, message: 'food_id is required.' };
+  if (!quantity || quantity <= 0) throw { status: 400, message: 'quantity must be a positive number.' };
+
+  const food = await FoodModel.findById(food_id);
+  if (!food) throw { status: 404, message: 'Food not found.' };
+
+  const ratio = quantity / 100;
+  const round1 = (n) => Math.round(n * 10) / 10;
+
+  return MealModel.addItem(mealId, {
+    name:     food.name,
+    quantity: quantity,
+    unit:     food.default_unit,
+    calories: round1(food.calories_per_100g * ratio),
+    protein:  round1(food.protein_per_100g  * ratio),
+    carbs:    round1(food.carbs_per_100g    * ratio),
+    fat:      round1(food.fat_per_100g      * ratio),
+  });
+}
+
+module.exports = { getByDate, createMeal, addItem, addItemFromFood, updateItem, deleteItem };

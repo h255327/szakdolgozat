@@ -1,7 +1,7 @@
 const { pool } = require('../config/db');
 
 const SELECT_COLS = `
-  id, user_id, title, summary, category, content, created_at, updated_at
+  id, user_id, title, summary, category, image_url, content, created_at, updated_at
 `;
 
 async function findAll() {
@@ -19,16 +19,16 @@ async function findById(id) {
   return rows[0] || null;
 }
 
-async function create({ userId, title, summary, category, content }) {
+async function create({ userId, title, summary, category, image_url, content }) {
   const [result] = await pool.query(
-    `INSERT INTO articles (user_id, title, summary, category, content)
-     VALUES (?, ?, ?, ?, ?)`,
-    [userId, title, summary ?? null, category ?? null, content]
+    `INSERT INTO articles (user_id, title, summary, category, image_url, content)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [userId, title, summary ?? null, category ?? null, image_url ?? null, content]
   );
   return findById(result.insertId);
 }
 
-const UPDATABLE_FIELDS = ['title', 'summary', 'category', 'content'];
+const UPDATABLE_FIELDS = ['title', 'summary', 'category', 'image_url', 'content'];
 
 async function updateById(id, data) {
   const fields = Object.keys(data).filter((k) => UPDATABLE_FIELDS.includes(k));

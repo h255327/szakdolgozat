@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 const SELECT_COLS = `
   id, user_id, title, description, category,
-  ingredients, instructions, prep_time, servings,
+  ingredients, instructions, image_url, prep_time, servings,
   created_at, updated_at
 `;
 
@@ -44,11 +44,11 @@ async function findById(id) {
   return rows[0] || null;
 }
 
-async function create({ userId, title, description, category, ingredients, instructions, prep_time, servings }) {
+async function create({ userId, title, description, category, ingredients, instructions, image_url, prep_time, servings }) {
   const [result] = await pool.query(
     `INSERT INTO recipes
-       (user_id, title, description, category, ingredients, instructions, prep_time, servings)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (user_id, title, description, category, ingredients, instructions, image_url, prep_time, servings)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       userId,
       title,
@@ -56,6 +56,7 @@ async function create({ userId, title, description, category, ingredients, instr
       category     ?? null,
       ingredients  ? JSON.stringify(ingredients)  : null,
       instructions ?? null,
+      image_url    ?? null,
       prep_time    ?? null,
       servings     ?? 1,
     ]
@@ -65,7 +66,7 @@ async function create({ userId, title, description, category, ingredients, instr
 
 const UPDATABLE_FIELDS = [
   'title', 'description', 'category',
-  'ingredients', 'instructions', 'prep_time', 'servings',
+  'ingredients', 'instructions', 'image_url', 'prep_time', 'servings',
 ];
 
 async function updateById(id, data) {

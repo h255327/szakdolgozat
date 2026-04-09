@@ -50,6 +50,7 @@ CREATE TABLE recipes (
   description  TEXT,
   prep_time    INT,                       -- minutes
   servings     INT           NOT NULL DEFAULT 1,
+  image_url VARCHAR(500) NULL
   created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE,

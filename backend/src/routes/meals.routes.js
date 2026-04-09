@@ -15,6 +15,9 @@ router.post('/',                                       mealsController.createMea
 // POST /api/meals/:mealId/items
 router.post('/:mealId/items',                          mealsController.addItem);
 
+// POST /api/meals/:mealId/items/from-food
+router.post('/:mealId/items/from-food',                mealsController.addItemFromFood);
+
 // PUT  /api/meals/:mealId/items/:itemId
 router.put('/:mealId/items/:itemId',                   mealsController.updateItem);
 

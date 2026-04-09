@@ -59,4 +59,14 @@ async function deleteItem(req, res) {
   }
 }
 
-module.exports = { getByDate, createMeal, addItem, updateItem, deleteItem };
+async function addItemFromFood(req, res) {
+  try {
+    const item = await mealsService.addItemFromFood(Number(req.params.mealId), req.user.id, req.body);
+    return res.status(201).json({ message: 'Item added from food database.', item });
+  } catch (err) {
+    const status = err.status || 500;
+    return res.status(status).json({ error: err.message || 'Failed to add item.' });
+  }
+}
+
+module.exports = { getByDate, createMeal, addItem, addItemFromFood, updateItem, deleteItem };
