@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getMeals, createMeal, addItem, deleteItem } from '../services/mealsApi';
+import { getMeals, createMeal, addItem, deleteItem, addItemFromRecipe } from '../services/mealsApi';
 import { searchFoods, addItemFromFood } from '../services/foodsApi';
+import { getRecipes, getRecipeNutrition } from '../services/recipesApi';
 
 const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack'];
 const MEAL_ICONS = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
@@ -254,10 +255,199 @@ function FoodSearchForm({ mealId, onAdded }) {
   );
 }
 
+// ── Recipe-based entry form ───────────────────────────────────────────────────
+
+function RecipeSearchForm({ mealId, onAdded }) {
+  const [query,     setQuery]     = useState('');
+  const [results,   setResults]   = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selected,  setSelected]  = useState(null);
+  const [nutrition, setNutrition] = useState(null);   // { perServing: { calories, protein, carbs, fat } }
+  const [servings,  setServings]  = useState('1');
+  const [saving,    setSaving]    = useState(false);
+  const [error,     setError]     = useState('');
+  const debounceRef = useRef(null);
+
+  // Debounced recipe search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!query.trim()) { setResults([]); return; }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const { data } = await getRecipes({ search: query.trim() });
+        setResults(data.recipes ?? data);
+      } catch { setResults([]); }
+      finally  { setSearching(false); }
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [query]);
+
+  async function selectRecipe(recipe) {
+    setSelected(recipe);
+    setResults([]);
+    setQuery('');
+    setServings('1');
+    setNutrition(null);
+    setError('');
+    // Fetch calculated nutrition for this recipe
+    try {
+      const { data } = await getRecipeNutrition(recipe.id);
+      setNutrition(data);
+    } catch { /* best-effort */ }
+  }
+
+  function clearSelection() {
+    setSelected(null);
+    setNutrition(null);
+    setServings('1');
+    setError('');
+  }
+
+  const qty = parseFloat(servings) || 1;
+  const ps  = nutrition?.perServing;
+  const r1  = (n) => Math.round(n * qty * 10) / 10;
+  const preview = ps ? {
+    calories: r1(ps.calories),
+    protein:  r1(ps.protein),
+    carbs:    r1(ps.carbs),
+    fat:      r1(ps.fat),
+  } : null;
+
+  async function handleLog() {
+    if (!selected) return;
+    if (qty <= 0) { setError('Enter a servings count greater than 0.'); return; }
+    setSaving(true);
+    setError('');
+    try {
+      await addItemFromRecipe(mealId, { recipe_id: selected.id, servings: qty });
+      setSelected(null);
+      setNutrition(null);
+      setServings('1');
+      onAdded();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to log recipe.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div>
+      {/* Search box */}
+      {!selected && (
+        <div style={{ position: 'relative' }}>
+          <div className="form-group" style={{ margin: 0 }}>
+            <label className="form-label" style={{ fontSize: '0.75rem' }}>Search recipe</label>
+            <input
+              type="text"
+              className="form-input"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. Pasta, Chicken soup…"
+              autoComplete="off"
+            />
+          </div>
+
+          {(searching || results.length > 0 || (!searching && query.trim())) && (
+            <div style={{
+              position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
+              background: '#fff', border: '1px solid var(--border)', borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginTop: '2px', maxHeight: '260px', overflowY: 'auto',
+            }}>
+              {searching && (
+                <div style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>Searching…</div>
+              )}
+              {!searching && results.map((recipe) => (
+                <button
+                  key={recipe.id}
+                  type="button"
+                  onClick={() => selectRecipe(recipe)}
+                  style={{
+                    display: 'block', width: '100%', textAlign: 'left',
+                    padding: '0.6rem 1rem', background: 'none', border: 'none',
+                    cursor: 'pointer', borderBottom: '1px solid var(--border)',
+                    fontSize: '0.875rem',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                >
+                  <span style={{ fontWeight: 600 }}>{recipe.title}</span>
+                  {recipe.category && (
+                    <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{recipe.category}</span>
+                  )}
+                  {recipe.servings && (
+                    <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>· {recipe.servings} serving{recipe.servings !== 1 ? 's' : ''}</span>
+                  )}
+                </button>
+              ))}
+              {!searching && results.length === 0 && query.trim() && (
+                <div style={{ padding: '0.75rem 1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>No recipes found.</div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Selected recipe + servings + nutrition preview */}
+      {selected && (
+        <div>
+          {/* Recipe badge */}
+          <div style={{ marginBottom: '0.75rem' }}>
+            <label className="form-label" style={{ fontSize: '0.75rem' }}>Selected recipe</label>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px',
+              padding: '0.5rem 0.75rem', fontSize: '0.875rem',
+            }}>
+              <div>
+                <span style={{ fontWeight: 600 }}>{selected.title}</span>
+                {selected.category && <span style={{ color: 'var(--text-muted)', marginLeft: '0.5rem' }}>{selected.category}</span>}
+                {selected.servings  && <span style={{ color: 'var(--text-muted)', marginLeft: '0.75rem' }}>🍽 makes {selected.servings} serving{selected.servings !== 1 ? 's' : ''}</span>}
+              </div>
+              <button type="button" onClick={clearSelection} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', padding: '0 0 0 0.5rem' }} title="Change recipe">✕</button>
+            </div>
+          </div>
+
+          {/* Servings + Log button row */}
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ width: '120px' }}>
+              <label className="form-label" style={{ fontSize: '0.75rem' }}>Servings eaten</label>
+              <input
+                type="number" min="0.1" step="0.1" className="form-input"
+                value={servings} onChange={(e) => setServings(e.target.value)} placeholder="1"
+              />
+            </div>
+
+            {/* Nutrition preview badges (auto-calculated × servings) */}
+            {preview && (
+              <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', flex: '1 1 auto' }}>
+                <span style={{ background: '#FFF7ED', color: 'var(--primary)', border: '1px solid #FED7AA', borderRadius: '5px', padding: '0.3rem 0.55rem', fontSize: '0.8rem', fontWeight: 600 }}>{preview.calories} kcal</span>
+                <span style={{ background: '#EFF6FF', color: '#3B82F6', border: '1px solid #BFDBFE', borderRadius: '5px', padding: '0.3rem 0.55rem', fontSize: '0.8rem' }}>{preview.protein}g P</span>
+                <span style={{ background: '#F0FDF4', color: '#10B981', border: '1px solid #BBF7D0', borderRadius: '5px', padding: '0.3rem 0.55rem', fontSize: '0.8rem' }}>{preview.carbs}g C</span>
+                <span style={{ background: '#FFFBEB', color: '#F59E0B', border: '1px solid #FDE68A', borderRadius: '5px', padding: '0.3rem 0.55rem', fontSize: '0.8rem' }}>{preview.fat}g F</span>
+              </div>
+            )}
+            {!preview && nutrition === null && (
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', flex: '1 1 auto' }}>Calculating nutrition…</span>
+            )}
+
+            <button type="button" className="btn btn-primary btn-sm" onClick={handleLog} disabled={saving} style={{ alignSelf: 'flex-end' }}>
+              {saving ? '…' : 'Log'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {error && <p style={{ color: '#DC2626', fontSize: '0.85rem', margin: '0.4rem 0 0' }}>{error}</p>}
+    </div>
+  );
+}
+
 // ── Combined Add Item form (tabbed) ───────────────────────────────────────────
 
 function AddItemForm({ mealId, onAdded }) {
-  const [tab, setTab] = useState('food'); // 'food' | 'manual'
+  const [tab, setTab] = useState('food'); // 'food' | 'recipe' | 'manual'
 
   const tabStyle = (active) => ({
     padding: '0.35rem 0.9rem',
@@ -276,11 +466,13 @@ function AddItemForm({ mealId, onAdded }) {
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.75rem', background: '#F3F4F6', borderRadius: '8px', padding: '0.25rem', width: 'fit-content' }}>
         <button type="button" style={tabStyle(tab === 'food')}   onClick={() => setTab('food')}>Food database</button>
+        <button type="button" style={tabStyle(tab === 'recipe')} onClick={() => setTab('recipe')}>From recipe</button>
         <button type="button" style={tabStyle(tab === 'manual')} onClick={() => setTab('manual')}>Manual entry</button>
       </div>
 
-      {tab === 'food'   && <FoodSearchForm mealId={mealId} onAdded={onAdded} />}
-      {tab === 'manual' && <ManualForm     mealId={mealId} onAdded={onAdded} />}
+      {tab === 'food'   && <FoodSearchForm    mealId={mealId} onAdded={onAdded} />}
+      {tab === 'recipe' && <RecipeSearchForm  mealId={mealId} onAdded={onAdded} />}
+      {tab === 'manual' && <ManualForm        mealId={mealId} onAdded={onAdded} />}
     </div>
   );
 }

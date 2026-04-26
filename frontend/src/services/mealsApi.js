@@ -19,3 +19,15 @@ export function updateItem(mealId, itemId, data) {
 export function deleteItem(mealId, itemId) {
   return api.delete(`/meals/${mealId}/items/${itemId}`);
 }
+
+export function addItemFromRecipe(mealId, data) {
+  return api.post(`/meals/${mealId}/items/from-recipe`, data);
+}
+
+export function logRecipeDirect(data) {
+  return api.post('/meals/log-recipe', data);
+}
+
+export function getMealHistory(days = 7) {
+  return api.get('/meals/history', { params: { days } });
+}

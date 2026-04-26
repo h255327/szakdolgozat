@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getArticle, deleteArticle } from '../services/articlesApi';
+import { getArticleComments, addArticleComment } from '../services/commentsApi';
 import { isAuthenticated, getToken } from '../services/auth';
 import { jwtDecode } from '../utils/jwt';
+import CommentsSection from '../components/CommentsSection';
 
 function ArticleDetailPage() {
   const { id }   = useParams();
@@ -12,7 +14,8 @@ function ArticleDetailPage() {
   const [error, setError]       = useState('');
   const [deleting, setDeleting] = useState(false);
 
-  const isAdmin = isAuthenticated() && jwtDecode(getToken())?.role === 'admin';
+  const currentUserId = isAuthenticated() ? jwtDecode(getToken())?.id : null;
+  const isAdmin       = isAuthenticated() && jwtDecode(getToken())?.role === 'admin';
 
   useEffect(() => {
     getArticle(id)
@@ -92,6 +95,14 @@ function ArticleDetailPage() {
           </div>
         </div>
       </div>
+
+      <CommentsSection
+        entityId={article.id}
+        currentUserId={currentUserId}
+        isAdmin={isAdmin}
+        fetchComments={getArticleComments}
+        addComment={addArticleComment}
+      />
     </div>
   );
 }

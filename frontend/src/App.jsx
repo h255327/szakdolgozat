@@ -20,6 +20,7 @@ import MealLogPage      from './pages/MealLogPage';
 import ShoppingListPage from './pages/ShoppingListPage';
 import ChatbotPage      from './pages/ChatbotPage';
 import AdminPage        from './pages/AdminPage';
+import ProgressPage     from './pages/ProgressPage';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path="/shopping"  element={<ProtectedRoute><ShoppingListPage /></ProtectedRoute>} />
           <Route path="/chatbot"   element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
           <Route path="/admin"     element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/progress"  element={<ProtectedRoute><ProgressPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </>

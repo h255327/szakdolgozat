@@ -26,3 +26,7 @@ export function updateRecipe(id, data) {
 export function deleteRecipe(id) {
   return api.delete(`/recipes/${id}`);
 }
+
+export function getRecipeNutrition(id) {
+  return api.get(`/recipes/${id}/nutrition`);
+}

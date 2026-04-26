@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { getDailyPlan } from '../services/plannerApi';
+import { generateShoppingList } from '../services/shoppingApi';
 import { getCatMeta } from '../utils/recipeCategories';
+import { userKey } from '../utils/sessionStore';
 
 const MEAL_TYPES  = ['breakfast', 'lunch', 'dinner', 'snack'];
 const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
@@ -47,21 +49,54 @@ function MealSlotCard({ type, slot }) {
 }
 
 function DietPlannerPage() {
-  const [plan, setPlan]       = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const navigate = useNavigate();
+
+  const [plan, setPlan]           = useState(null);
+  const [loading, setLoading]     = useState(false);
+  const [listLoading, setListLoading] = useState(false);
+  const [error, setError]         = useState('');
+
+  // Restore saved plan on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(userKey('diet_plan'));
+      if (saved) setPlan(JSON.parse(saved));
+    } catch { /* ignore corrupted data */ }
+  }, []);
 
   async function handleGenerate() {
     setLoading(true);
     setError('');
-    setPlan(null);
     try {
       const { data } = await getDailyPlan();
       setPlan(data.plan);
+      localStorage.setItem(userKey('diet_plan'), JSON.stringify(data.plan));
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to generate plan.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCreateShoppingList() {
+    const recipeIds = Object.values(plan.meals).filter(Boolean).map((s) => s.recipe_id);
+    if (recipeIds.length === 0) return;
+    setListLoading(true);
+    setError('');
+    try {
+      const { data } = await generateShoppingList(recipeIds);
+      // Write directly into the shopping list's storage slot so the page
+      // restores the result on mount without any extra API call.
+      localStorage.setItem(userKey('shopping_list'), JSON.stringify({
+        items:   data.items,
+        sources: data.sources,
+        checked: [],
+      }));
+      navigate('/shopping');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to build shopping list.');
+    } finally {
+      setListLoading(false);
     }
   }
 
@@ -82,9 +117,16 @@ function DietPlannerPage() {
                 Plan is generated based on your <Link to="/profile" style={{ color: 'var(--primary)' }}>profile settings</Link>.
               </p>
             </div>
-            <button className="btn btn-primary" onClick={handleGenerate} disabled={loading}>
-              {loading ? 'Generating…' : plan ? '↺ Regenerate plan' : '✨ Generate today\'s plan'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {plan && (
+                <button className="btn btn-secondary" onClick={handleCreateShoppingList} disabled={listLoading || loading}>
+                  {listLoading ? 'Building list…' : '🛒 Create shopping list'}
+                </button>
+              )}
+              <button className="btn btn-primary" onClick={handleGenerate} disabled={loading || listLoading}>
+                {loading ? 'Generating…' : plan ? '↺ Regenerate plan' : '✨ Generate today\'s plan'}
+              </button>
+            </div>
           </div>
         </div>
 

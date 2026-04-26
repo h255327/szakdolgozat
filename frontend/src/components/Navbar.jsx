@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { to: '/meals',     label: 'Meal Log' },
   { to: '/shopping',  label: 'Shopping' },
   { to: '/chatbot',   label: 'Assistant' },
+  { to: '/progress',  label: 'Progress' },
 ];
 
 function Navbar() {
