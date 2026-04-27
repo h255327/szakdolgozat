@@ -95,7 +95,7 @@ function EditRecipePage() {
                 <label className="form-label" htmlFor="title">Title *</label>
                 <input id="title" name="title" type="text" className="form-input" value={form.title} onChange={handleChange} required />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
+              <div className="grid-2-form">
                 <div className="form-group">
                   <label className="form-label" htmlFor="category">Category</label>
                   <select id="category" name="category" className="form-select" value={form.category} onChange={handleChange}>

@@ -44,7 +44,7 @@ function ManualForm({ mealId, onAdded }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr 1fr auto', gap: '0.5rem', alignItems: 'end' }}>
+      <div className="manual-entry-grid">
         <div className="form-group" style={{ margin: 0 }}>
           <label className="form-label" style={{ fontSize: '0.75rem' }}>Item name *</label>
           <input name="name" type="text" className="form-input" value={form.name} onChange={handleChange} required placeholder="e.g. Chicken breast" />
@@ -169,7 +169,7 @@ function FoodSearchForm({ mealId, onAdded }) {
           {/* Results dropdown */}
           {(searching || results.length > 0) && (
             <div style={{
-              position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
+              position: 'absolute', zIndex: 50, top: '100%', left: 0, right: 0,
               background: '#fff', border: '1px solid var(--border)', borderRadius: '8px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginTop: '2px', maxHeight: '260px', overflowY: 'auto',
             }}>
@@ -351,7 +351,7 @@ function RecipeSearchForm({ mealId, onAdded }) {
 
           {(searching || results.length > 0 || (!searching && query.trim())) && (
             <div style={{
-              position: 'absolute', zIndex: 10, top: '100%', left: 0, right: 0,
+              position: 'absolute', zIndex: 50, top: '100%', left: 0, right: 0,
               background: '#fff', border: '1px solid var(--border)', borderRadius: '8px',
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginTop: '2px', maxHeight: '260px', overflowY: 'auto',
             }}>
@@ -505,7 +505,7 @@ function MealSection({ type, meal, date, onRefresh }) {
   const mealTotal = meal?.items?.reduce((sum, i) => sum + (Number(i.calories) || 0), 0) || 0;
 
   return (
-    <div className="card" style={{ marginBottom: '1rem' }}>
+    <div className="card" style={{ marginBottom: '1rem', overflow: 'visible' }}>
       <div className="card-body">
         <div className="flex-between" style={{ marginBottom: meal ? '0.75rem' : 0 }}>
           <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

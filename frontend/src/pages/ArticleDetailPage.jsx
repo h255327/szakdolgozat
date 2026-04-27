@@ -5,6 +5,7 @@ import { getArticleComments, addArticleComment } from '../services/commentsApi';
 import { isAuthenticated, getToken } from '../services/auth';
 import { jwtDecode } from '../utils/jwt';
 import CommentsSection from '../components/CommentsSection';
+import ImgWithFallback from '../components/ImgWithFallback';
 
 function ArticleDetailPage() {
   const { id }   = useParams();
@@ -56,13 +57,14 @@ function ArticleDetailPage() {
       </Link>
 
       <div className="card">
-        {article.image_url && (
-          <img
-            src={article.image_url}
-            alt={article.title}
-            style={{ width: '100%', height: '280px', objectFit: 'cover', borderRadius: '12px 12px 0 0', display: 'block' }}
-          />
-        )}
+        <ImgWithFallback
+          src={article.image_url}
+          alt={article.title}
+          imgStyle={{ width: '100%', height: '280px', objectFit: 'cover', borderRadius: '12px 12px 0 0', display: 'block' }}
+          fallbackClassName="cat-article"
+          fallbackStyle={{ height: '180px', borderRadius: '12px 12px 0 0', fontSize: '3.5rem' }}
+          fallbackIcon="📰"
+        />
         <div className="card-body" style={{ padding: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
             <div style={{ flex: 1 }}>

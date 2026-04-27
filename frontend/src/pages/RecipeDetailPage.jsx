@@ -8,6 +8,7 @@ import { isAuthenticated, getToken } from '../services/auth';
 import { jwtDecode } from '../utils/jwt';
 import { getCatMeta } from '../utils/recipeCategories';
 import CommentsSection from '../components/CommentsSection';
+import ImgWithFallback from '../components/ImgWithFallback';
 
 const MEAL_TYPES  = ['breakfast', 'lunch', 'dinner', 'snack'];
 const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
@@ -284,16 +285,14 @@ function RecipeDetailPage() {
         {/* Main content */}
         <div>
           {/* Hero banner */}
-          {recipe.image_url
-            ? <img
-                src={recipe.image_url}
-                alt={recipe.title}
-                style={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '12px', marginBottom: '1.5rem', display: 'block' }}
-              />
-            : <div className={`card-img-placeholder ${catClass}`} style={{ borderRadius: '12px', height: '220px', marginBottom: '1.5rem', fontSize: '4rem' }}>
-                {icon}
-              </div>
-          }
+          <ImgWithFallback
+            src={recipe.image_url}
+            alt={recipe.title}
+            imgStyle={{ width: '100%', height: '220px', objectFit: 'cover', borderRadius: '12px', marginBottom: '1.5rem', display: 'block' }}
+            fallbackClassName={catClass}
+            fallbackStyle={{ borderRadius: '12px', height: '220px', marginBottom: '1.5rem', fontSize: '4rem' }}
+            fallbackIcon={icon}
+          />
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
             <div>

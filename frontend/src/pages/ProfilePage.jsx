@@ -165,7 +165,7 @@ function ProfilePage() {
                 Used to calculate your recommended daily calorie target.
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1rem' }}>
+              <div className="grid-2-form">
                 <div className="form-group">
                   <label className="form-label" htmlFor="weight">Weight (kg)</label>
                   <input id="weight" name="weight" type="number" min="0" step="0.1"

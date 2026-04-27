@@ -3,16 +3,20 @@ import { Link } from 'react-router-dom';
 import { getRecipes, getCategories } from '../services/recipesApi';
 import { isAuthenticated } from '../services/auth';
 import { getCatMeta } from '../utils/recipeCategories';
+import ImgWithFallback from '../components/ImgWithFallback';
 
 function RecipeCard({ recipe }) {
   const { css: catClass, icon } = getCatMeta(recipe.category);
   return (
     <Link to={`/recipes/${recipe.id}`} style={{ textDecoration: 'none' }}>
       <div className="card card-lift">
-        {recipe.image_url
-          ? <img src={recipe.image_url} alt={recipe.title} className="card-img" />
-          : <div className={`card-img-placeholder ${catClass}`}>{icon}</div>
-        }
+        <ImgWithFallback
+          src={recipe.image_url}
+          alt={recipe.title}
+          imgClassName="card-img"
+          fallbackClassName={catClass}
+          fallbackIcon={icon}
+        />
         <div className="card-body">
           {recipe.category && (
             <span className="tag tag-orange" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>

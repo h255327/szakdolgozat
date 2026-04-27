@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getRecipes } from '../services/recipesApi';
 import { getArticles } from '../services/articlesApi';
 import { isAuthenticated } from '../services/auth';
+import ImgWithFallback from '../components/ImgWithFallback';
 
 const FEATURES = [
   { icon: '🍽️', title: 'Recipe Library',    desc: 'Browse hundreds of healthy recipes filtered by category and diet type.' },
@@ -18,10 +19,13 @@ function RecipeCard({ recipe }) {
   return (
     <Link to={`/recipes/${recipe.id}`} style={{ textDecoration: 'none' }}>
       <div className="card card-lift">
-        {recipe.image_url
-          ? <img src={recipe.image_url} alt={recipe.title} className="card-img" />
-          : <div className={`card-img-placeholder ${catClass}`}>{icon}</div>
-        }
+        <ImgWithFallback
+          src={recipe.image_url}
+          alt={recipe.title}
+          imgClassName="card-img"
+          fallbackClassName={catClass}
+          fallbackIcon={icon}
+        />
         <div className="card-body">
           {recipe.category && <span className="tag tag-orange" style={{ marginBottom: '0.4rem', display: 'inline-block' }}>{recipe.category}</span>}
           <h3 style={{ margin: '0 0 0.4rem', fontSize: '1rem' }}>{recipe.title}</h3>
@@ -36,7 +40,14 @@ function ArticleCard({ article }) {
   return (
     <Link to={`/articles/${article.id}`} style={{ textDecoration: 'none' }}>
       <div className="card card-lift">
-        <div className="card-img-placeholder cat-default" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>📰</div>
+        <ImgWithFallback
+          src={article.image_url}
+          alt={article.title}
+          imgClassName="card-img"
+          fallbackClassName="cat-default"
+          fallbackStyle={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+          fallbackIcon="📰"
+        />
         <div className="card-body">
           <h3 style={{ margin: '0 0 0.4rem', fontSize: '1rem' }}>{article.title}</h3>
           {article.summary && <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{article.summary}</p>}

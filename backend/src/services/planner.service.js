@@ -54,6 +54,7 @@ async function generateDailyPlan(userId) {
           title:              recipe.title,
           category:           recipe.category     || null,
           description:        recipe.description  || null,
+          image_url:          recipe.image_url    || null,
           prep_time:          recipe.prep_time     || null,
           servings:           recipe.servings      || null,
           calorie_target:     calorieTarget

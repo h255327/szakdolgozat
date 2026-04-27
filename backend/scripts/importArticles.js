@@ -231,7 +231,7 @@ Importantly, the diet also comes embedded in a cultural context of practices tha
     title:    'Plant-Based Eating: Separating Evidence from Ideology',
     category: 'diet-culture',
     summary:  'Plant-based diets are among the fastest-growing food trends globally. What does the evidence say about their health, environmental, and practical implications?',
-    image_url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80',
+    image_url: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
     content: `Plant-based eating exists on a spectrum from flexitarianism (reducing but not eliminating animal products) to pescatarianism, vegetarianism, and veganism. In common usage, "plant-based" often refers to a diet that centres whole plant foods while not necessarily excluding all animal products — a distinction that matters because the evidence for different points on this spectrum differs substantially.
 
 The nutritional case for increasing plant food consumption is robust. Epidemiological data consistently shows that higher fruit and vegetable intake is associated with lower risk of cardiovascular disease, certain cancers, type 2 diabetes, and all-cause mortality. These associations likely reflect multiple mechanisms: fibre supporting gut health and cholesterol regulation; phytonutrients reducing inflammation and oxidative damage; lower calorie density supporting healthy body weight; and the displacement of less healthy foods from the diet.
@@ -389,7 +389,22 @@ async function main() {
     if (!owner) throw new Error('No admin user found. Run: npm run seed');
     console.log(`Owner: "${owner.username}" (id=${owner.id})\n`);
 
-    // Collect existing titles to skip duplicates
+    // ── Sync image_url for already-existing articles ──────────────────────
+    // Runs before the insert loop so previously seeded articles always get
+    // the correct (deduplicated) image URL from the dataset above.
+    console.log('Syncing images for existing articles…');
+    for (const a of ARTICLES) {
+      const [[row]] = await conn.query(
+        'SELECT id FROM articles WHERE LOWER(title) = ?',
+        [a.title.toLowerCase()]
+      );
+      if (row) {
+        await conn.query('UPDATE articles SET image_url = ? WHERE id = ?', [a.image_url ?? null, row.id]);
+      }
+    }
+    console.log('Image sync done.\n');
+
+    // ── Insert new articles ────────────────────────────────────────────────
     const [existing] = await conn.query('SELECT title FROM articles');
     const existingTitles = new Set(existing.map((a) => a.title.toLowerCase()));
 

@@ -31,6 +31,7 @@ body {
   line-height: 1.6;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 a { color: inherit; text-decoration: none; }
 img { display: block; max-width: 100%; }
@@ -53,6 +54,25 @@ main { min-height: calc(100vh - 62px); }
 @media (max-width: 1024px) { .grid-3 { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 680px)  {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+}
+
+/* Two-column form grid (body metrics, recipe basic info, etc.) */
+.grid-2-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+@media (max-width: 480px) { .grid-2-form { grid-template-columns: 1fr; } }
+
+/* Eight-column manual meal entry form */
+.manual-entry-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+@media (max-width: 640px) {
+  .manual-entry-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .manual-entry-grid > *:first-child { grid-column: 1 / -1; }
+  .manual-entry-grid > *:last-child  { grid-column: 1 / -1; }
 }
 
 /* ── Flex utils ─────────────────────────────────────────────────────────────── */
@@ -243,7 +263,7 @@ main { min-height: calc(100vh - 62px); }
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  height: 62px;
+  min-height: 62px;
   display: flex;
   align-items: center;
   gap: 1.5rem;
@@ -425,9 +445,57 @@ main { min-height: calc(100vh - 62px); }
 .feature-icon { font-size: 1.75rem; margin-bottom: 0.6rem; }
 .feature-card { padding: 1.4rem; text-align: center; }
 
-/* ── Responsive hide ─────────────────────────────────────────────────────────── */
+/* ── Navbar hamburger button ─────────────────────────────────────────────────── */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  padding: 0.3rem 0.55rem;
+  font-size: 1.15rem;
+  color: var(--text);
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.nav-hamburger:hover { background: #F3F4F6; }
+
+/* ── Responsive hide / mobile ────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .hero-title  { font-size: 1.9rem; }
   .page-title  { font-size: 1.4rem; }
   .hide-mobile { display: none !important; }
+
+  /* Hamburger visible; nav links and actions hidden by default */
+  .nav-hamburger { display: flex; align-items: center; margin-left: auto; }
+  .navbar-inner  { flex-wrap: wrap; gap: 0; align-items: center; }
+  .navbar-inner .nav-logo { padding: 1rem 0; }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    padding: 0.35rem 0 0.5rem;
+    border-top: 1px solid var(--border);
+    flex: none;
+    align-items: stretch;
+  }
+  .nav-actions {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+    padding: 0.6rem 0 1rem;
+    border-top: 1px solid var(--border);
+    flex-shrink: initial;
+  }
+
+  /* Open state — show nav links and actions stacked below the header row */
+  .nav-mobile-open .nav-links  { display: flex; }
+  .nav-mobile-open .nav-actions { display: flex; }
+
+  .nav-link { padding: 0.6rem 0.75rem; border-radius: var(--r-sm); }
+  .nav-mobile-open .nav-actions .btn { width: 100%; justify-content: center; }
 }

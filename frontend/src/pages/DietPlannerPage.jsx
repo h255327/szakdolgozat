@@ -4,6 +4,7 @@ import { getDailyPlan } from '../services/plannerApi';
 import { generateShoppingList } from '../services/shoppingApi';
 import { getCatMeta } from '../utils/recipeCategories';
 import { userKey } from '../utils/sessionStore';
+import ImgWithFallback from '../components/ImgWithFallback';
 
 const MEAL_TYPES  = ['breakfast', 'lunch', 'dinner', 'snack'];
 const MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
@@ -14,9 +15,15 @@ function MealSlotCard({ type, slot }) {
 
   return (
     <div className="card">
-      <div className={`card-img-placeholder ${catClass}`} style={{ height: '80px', fontSize: '2rem' }}>
-        {MEAL_ICONS[type]}
-      </div>
+      <ImgWithFallback
+        src={slot?.image_url}
+        alt={slot?.title || type}
+        imgClassName="card-img"
+        imgStyle={{ height: '120px', objectFit: 'cover' }}
+        fallbackClassName={catClass}
+        fallbackStyle={{ height: '80px', fontSize: '2rem' }}
+        fallbackIcon={MEAL_ICONS[type]}
+      />
       <div className="card-body">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
           <span className="tag tag-gray">{MEAL_LABELS[type]}</span>

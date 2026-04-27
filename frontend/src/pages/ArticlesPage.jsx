@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getArticles } from '../services/articlesApi';
 import { isAuthenticated, getToken } from '../services/auth';
 import { jwtDecode } from '../utils/jwt';
+import ImgWithFallback from '../components/ImgWithFallback';
 
 const CAT_GRADIENTS = {
   nutrition:             'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
@@ -38,10 +39,13 @@ function ArticleCard({ article }) {
   return (
     <Link to={`/articles/${article.id}`} style={{ textDecoration: 'none' }}>
       <div className="card card-lift">
-        {article.image_url
-          ? <img src={article.image_url} alt={article.title} className="card-img" />
-          : <div className="card-img-placeholder" style={{ background: grad }}>{icon}</div>
-        }
+        <ImgWithFallback
+          src={article.image_url}
+          alt={article.title}
+          imgClassName="card-img"
+          fallbackStyle={{ background: grad }}
+          fallbackIcon={icon}
+        />
         <div className="card-body">
           {article.category && (
             <span className="tag tag-purple" style={{ marginBottom: '0.5rem', display: 'inline-block' }}>

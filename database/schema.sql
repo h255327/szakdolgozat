@@ -6,7 +6,7 @@ CREATE DATABASE IF NOT EXISTS healthy_eating_app
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE healthy_eating_db;
+USE healthy_eating_app;
 
 -- =============================================================
 -- USERS
@@ -50,7 +50,7 @@ CREATE TABLE recipes (
   description  TEXT,
   prep_time    INT,                       -- minutes
   servings     INT           NOT NULL DEFAULT 1,
-  image_url VARCHAR(500) NULL
+  image_url VARCHAR(500) NULL,
   created_at   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE,

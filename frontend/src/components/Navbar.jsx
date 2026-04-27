@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { isAuthenticated, logout } from '../services/auth';
 
@@ -17,6 +18,20 @@ function Navbar() {
   const navigate  = useNavigate();
   const location  = useLocation();
   const loggedIn  = isAuthenticated();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close mobile menu on every route change
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  // Close mobile menu when clicking outside the navbar
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleOutsideClick(e) {
+      if (!e.target.closest('.navbar')) setMenuOpen(false);
+    }
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [menuOpen]);
 
   function handleLogout() {
     logout();
@@ -29,9 +44,18 @@ function Navbar() {
   }
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar${menuOpen ? ' nav-mobile-open' : ''}`}>
       <div className="navbar-inner">
         <Link to="/" className="nav-logo">🥗 HealthyEat</Link>
+
+        <button
+          className="nav-hamburger"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? '✕' : '☰'}
+        </button>
 
         <div className="nav-links">
           {NAV_LINKS.map(({ to, label }) => (

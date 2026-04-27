@@ -31,18 +31,18 @@ function fetchJSON(url) {
 
 async function findMealImage(title) {
   try {
-    // Try exact title first
-    const d1 = await fetchJSON(
+    const data = await fetchJSON(
       `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(title)}`
     );
-    if (d1.meals && d1.meals[0]) return d1.meals[0].strMealThumb;
-
-    // Try first meaningful word as fallback
-    const keyword = title.split(' ').find((w) => w.length > 3) || title.split(' ')[0];
-    const d2 = await fetchJSON(
-      `https://www.themealdb.com/api/json/v1/1/search.php?s=${encodeURIComponent(keyword)}`
-    );
-    if (d2.meals && d2.meals[0]) return d2.meals[0].strMealThumb;
+    if (data.meals) {
+      // Only accept an exact title match — a keyword fallback would assign an
+      // unrelated dish's image (e.g. "Green" → "Green Thai Curry" for
+      // "Green Smoothie Bowl"), causing visible title/image mismatches.
+      const match = data.meals.find(
+        (m) => m.strMeal.toLowerCase() === title.toLowerCase()
+      );
+      if (match) return match.strMealThumb;
+    }
   } catch { /* network error – skip */ }
   return null;
 }
@@ -505,12 +505,32 @@ async function main() {
     const [dtRows] = await conn.query('SELECT id, name FROM diet_types');
     const dtMap = Object.fromEntries(dtRows.map((r) => [r.name, r.id]));
 
-    // ── Fix existing recipes that are missing image_url ────────────────────
+    // ── Re-sync images for all dataset recipes (fixes previously wrong images) ─
+    // Uses exact-match only — any recipe that was previously assigned an image
+    // via the old keyword fallback will have its image corrected or cleared.
+    const datasetTitles = RECIPES.map((r) => r.title.toLowerCase());
+    const placeholders  = datasetTitles.map(() => '?').join(', ');
+    const [datasetRows] = await conn.query(
+      `SELECT id, title FROM recipes WHERE LOWER(title) IN (${placeholders})`,
+      datasetTitles
+    );
+    if (datasetRows.length > 0) {
+      console.log(`Re-syncing images for ${datasetRows.length} dataset recipe(s)…`);
+      for (const row of datasetRows) {
+        const imgUrl = await findMealImage(row.title);
+        await conn.query('UPDATE recipes SET image_url = ? WHERE id = ?', [imgUrl ?? null, row.id]);
+        console.log(`  ${imgUrl ? '✓ set' : '– cleared (no exact match)'}:  "${row.title}"`);
+      }
+      console.log('');
+    }
+
+    // ── Fix other existing recipes that still have no image ────────────────
     const [noImage] = await conn.query(
-      `SELECT id, title FROM recipes WHERE image_url IS NULL OR image_url = ''`
+      `SELECT id, title FROM recipes WHERE (image_url IS NULL OR image_url = '') AND LOWER(title) NOT IN (${placeholders})`,
+      datasetTitles
     );
     if (noImage.length > 0) {
-      console.log(`Fetching images for ${noImage.length} existing recipe(s) without images…`);
+      console.log(`Fetching images for ${noImage.length} other recipe(s) without images…`);
       let fixed = 0;
       for (const row of noImage) {
         const imgUrl = await findMealImage(row.title);
@@ -522,7 +542,7 @@ async function main() {
           console.log(`  –  no image found: "${row.title}"`);
         }
       }
-      console.log(`Fixed ${fixed}/${noImage.length} existing recipes.\n`);
+      console.log(`Fixed ${fixed}/${noImage.length} other recipe(s).\n`);
     }
 
     // ── Insert new recipes ─────────────────────────────────────────────────
