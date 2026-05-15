@@ -7,6 +7,8 @@ import { getRecipeRating, rateRecipe } from '../services/ratingsApi';
 import { isAuthenticated, getToken } from '../services/auth';
 import { jwtDecode } from '../utils/jwt';
 import { getCatMeta } from '../utils/recipeCategories';
+import { userKey } from '../utils/sessionStore';
+import { generateShoppingList } from '../services/shoppingApi';
 import CommentsSection from '../components/CommentsSection';
 import ImgWithFallback from '../components/ImgWithFallback';
 
@@ -112,6 +114,152 @@ function LogRecipePanel({ recipeId, nutrition }) {
               </button>
             </div>
           </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── AddToShoppingListPanel ─────────────────────────────────────────────────────
+
+function AddToShoppingListPanel({ recipeId, recipeTitle }) {
+  const [adding,  setAdding]  = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error,   setError]   = useState('');
+
+  async function handleAdd() {
+    setAdding(true);
+    setSuccess('');
+    setError('');
+    try {
+      const { data } = await generateShoppingList([recipeId]);
+      const storageKey = userKey('shopping_list');
+      let existing = { items: [], sources: [], checked: [] };
+      try {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) existing = JSON.parse(saved);
+      } catch { /* ignore */ }
+
+      // Merge items by name
+      const mergedMap = {};
+      for (const item of existing.items || []) mergedMap[item.name] = item;
+      for (const item of data.items || []) {
+        if (mergedMap[item.name]) {
+          const combined = [...new Set([...mergedMap[item.name].entries, ...item.entries])];
+          mergedMap[item.name] = { ...item, entries: combined };
+        } else {
+          mergedMap[item.name] = item;
+        }
+      }
+
+      const sourceTitles = (existing.sources || []).map((s) => s.title);
+      const mergedSources = [
+        ...(existing.sources || []),
+        ...(data.sources || []).filter((s) => !sourceTitles.includes(s.title)),
+      ];
+
+      localStorage.setItem(storageKey, JSON.stringify({
+        items:   Object.values(mergedMap),
+        sources: mergedSources,
+        checked: existing.checked || [],
+        source:  existing.source || null,
+      }));
+      setSuccess('Ingredients added to your shopping list ✓');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to add to shopping list.');
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  return (
+    <div className="card">
+      <div className="card-body">
+        <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>Shopping List</h3>
+        {success ? (
+          <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: '#16A34A', marginBottom: '0.75rem' }}>
+            {success}
+            <a href="/shopping" style={{ marginLeft: '0.5rem', color: '#16A34A', fontWeight: 600 }}>View list →</a>
+          </div>
+        ) : (
+          <>
+            {error && <p style={{ color: '#DC2626', fontSize: '0.82rem', margin: '0 0 0.5rem' }}>{error}</p>}
+            <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleAdd} disabled={adding}>
+              {adding ? 'Adding…' : '🛒 Add ingredients to shopping list'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── SaveToDietPlanPanel ────────────────────────────────────────────────────────
+
+const PLAN_MEAL_TYPES  = ['breakfast', 'lunch', 'dinner', 'snack'];
+const PLAN_MEAL_LABELS = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' };
+
+function SaveToDietPlanPanel({ recipe }) {
+  const [mealType, setMealType] = useState('lunch');
+  const [success,  setSuccess]  = useState('');
+  const [error,    setError]    = useState('');
+
+  function handleSave() {
+    setSuccess('');
+    setError('');
+    try {
+      const key  = userKey('diet_plan');
+      let plan   = null;
+      const raw  = localStorage.getItem(key);
+      if (raw) plan = JSON.parse(raw);
+
+      if (!plan) {
+        // Create a minimal plan structure so the planner page can display it
+        plan = { meals: {}, calorie_target: null, diet_type: null };
+      }
+
+      plan.meals[mealType] = {
+        recipe_id:   recipe.id,
+        title:       recipe.title,
+        description: recipe.description || '',
+        category:    recipe.category    || '',
+        image_url:   recipe.image_url   || null,
+        prep_time:   recipe.prep_time   || null,
+        servings:    recipe.servings    || 1,
+        calorie_target: null,
+      };
+
+      localStorage.setItem(key, JSON.stringify(plan));
+      setSuccess(`Saved to ${PLAN_MEAL_LABELS[mealType].toLowerCase()} in your diet plan ✓`);
+    } catch {
+      setError('Failed to save to diet plan.');
+    }
+  }
+
+  return (
+    <div className="card">
+      <div className="card-body">
+        <h3 style={{ margin: '0 0 0.75rem', fontSize: '1rem' }}>Diet Plan</h3>
+        {success ? (
+          <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', padding: '0.5rem 0.75rem', fontSize: '0.85rem', color: '#16A34A', marginBottom: '0.75rem' }}>
+            {success}
+            <a href="/planner" style={{ marginLeft: '0.5rem', color: '#16A34A', fontWeight: 600 }}>View plan →</a>
+          </div>
+        ) : (
+          <>
+            <div className="form-group" style={{ margin: '0 0 0.6rem' }}>
+              <label className="form-label" style={{ fontSize: '0.75rem' }}>Meal slot</label>
+              <select className="form-input" value={mealType} onChange={(e) => { setMealType(e.target.value); setError(''); }}>
+                {PLAN_MEAL_TYPES.map((t) => (
+                  <option key={t} value={t}>{PLAN_MEAL_LABELS[t]}</option>
+                ))}
+              </select>
+            </div>
+            {error && <p style={{ color: '#DC2626', fontSize: '0.82rem', margin: '0 0 0.5rem' }}>{error}</p>}
+            <button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={handleSave}>
+              📅 Save to diet plan
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -336,6 +484,12 @@ function RecipeDetailPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Log this recipe */}
           {isAuthenticated() && <LogRecipePanel recipeId={recipe.id} nutrition={nutrition} />}
+
+          {/* Add to shopping list */}
+          {isAuthenticated() && <AddToShoppingListPanel recipeId={recipe.id} recipeTitle={recipe.title} />}
+
+          {/* Save to diet plan */}
+          {isAuthenticated() && <SaveToDietPlanPanel recipe={recipe} />}
 
           {/* Nutrition per serving */}
           {nutrition && (

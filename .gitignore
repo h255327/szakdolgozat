@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Dependencies
 node_modules/
 
@@ -30,6 +29,3 @@ Thumbs.db
 
 # Vite
 *.local
-=======
-.DS_Store
->>>>>>> 0b5ba49d077860e8361ee818f0c7f7c8b2d6f52e

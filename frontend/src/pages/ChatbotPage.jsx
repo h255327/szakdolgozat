@@ -46,7 +46,13 @@ function ChatbotPage() {
       const { data } = await sendMessage(msg, history);
       setHistory((prev) => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to get a response. Please try again.');
+      const status = err.response?.status;
+      const msg    = err.response?.data?.error || '';
+      if (status === 503 || msg.toLowerCase().includes('not configured')) {
+        setError('The AI assistant is not available right now — the server is missing an OpenAI API key. Please contact the administrator.');
+      } else {
+        setError(msg || 'Failed to get a response. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -139,6 +145,13 @@ function ChatbotPage() {
         </div>
         <p style={{ margin: '0.3rem 0 0', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
           Enter to send · Shift+Enter for new line
+        </p>
+      </div>
+
+      {/* Disclaimer */}
+      <div style={{ padding: '0.6rem 1.25rem', borderTop: '1px solid var(--border)', background: '#FFFBEB', flexShrink: 0 }}>
+        <p style={{ margin: 0, fontSize: '0.7rem', color: '#92400E', lineHeight: '1.4' }}>
+          ⚠️ <strong>Disclaimer:</strong> This AI assistant provides general nutrition information only and does not replace professional medical or dietitian advice. Always consult a qualified healthcare professional before making significant changes to your diet.
         </p>
       </div>
       </div>{/* end chat-card */}

@@ -1,7 +1,14 @@
 const OpenAI    = require('openai');
 const UserModel = require('../models/user.model');
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let client = null;
+function getClient() {
+  if (!process.env.OPENAI_API_KEY) {
+    throw { status: 503, message: 'The AI assistant is not configured on this server. Please add an OpenAI API key.' };
+  }
+  if (!client) client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return client;
+}
 
 function buildSystemPrompt(user) {
   const lines = [
@@ -46,7 +53,7 @@ async function sendMessage(userId, message, history = []) {
     { role: 'user', content: message.trim() },
   ];
 
-  const completion = await client.chat.completions.create({
+  const completion = await getClient().chat.completions.create({
     model:       'gpt-4o-mini',
     messages,
     max_tokens:  512,
