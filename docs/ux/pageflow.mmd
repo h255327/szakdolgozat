@@ -1,0 +1,65 @@
+flowchart TD
+
+S01["▶ 🔒 S01 — Login"]
+S02["🔒 S02 — Register"]
+S03["S03 — Home"]
+S04["S04 — Recipes"]
+S05["S05 — Recipe Detail"]
+S06["S06 — Articles"]
+S07["S07 — Dashboard"]
+S08["S08 — Profile"]
+S09["S09 — Meal Tracker"]
+S10["S10 — Diet Planner"]
+S11["S11 — Shopping List"]
+S12["S12 — Chatbot"]
+
+S01 -->|"Login button"| S03
+S01 -->|"Register link"| S02
+
+S02 -->|"Register button"| S03
+S02 -->|"Already have an account"| S01
+
+S03 -->|"Navbar: Recipes"| S04
+S03 -->|"Navbar: Articles"| S06
+S03 -->|"Navbar: Dashboard"| S07
+S03 -->|"Navbar: Profile"| S08
+S03 -->|"Navbar: Meal Tracker"| S09
+S03 -->|"Navbar: Diet Planner"| S10
+S03 -->|"Navbar: Shopping List"| S11
+S03 -->|"Navbar: Chatbot"| S12
+S03 -->|"Featured recipe card"| S05
+
+S04 -->|"Recipe card click"| S05
+S04 -->|"Navbar: Articles"| S06
+S04 -->|"Navbar: Dashboard"| S07
+
+S05 -->|"Back to recipes"| S04
+S05 -->|"Navbar: Articles"| S06
+S05 -->|"Navbar: Dashboard"| S07
+
+S06 -->|"Navbar: Dashboard"| S07
+S06 -->|"Navbar: Recipes"| S04
+
+S07 -->|"Navbar: Home"| S03
+S07 -->|"Navbar: Recipes"| S04
+S07 -->|"Navbar: Articles"| S06
+S07 -->|"Navbar: Profile"| S08
+S07 -->|"Navbar: Meal Tracker"| S09
+S07 -->|"Navbar: Diet Planner"| S10
+S07 -->|"Navbar: Shopping List"| S11
+S07 -->|"Navbar: Chatbot"| S12
+
+S08 -->|"Save button"| S08
+S08 -->|"Navbar: Dashboard"| S07
+
+S09 -->|"Add meal / add item"| S09
+S09 -->|"Navbar: Dashboard"| S07
+
+S10 -->|"Generate plan button"| S10
+S10 -->|"Navbar: Dashboard"| S07
+
+S11 -->|"Edit / refresh list"| S11
+S11 -->|"Navbar: Dashboard"| S07
+
+S12 -->|"Send message"| S12
+S12 -->|"Navbar: Dashboard"| S07
